@@ -48,7 +48,7 @@ export default function ExpensePieChart({ data }: ExpensePieChartProps) {
                                     boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
                                     color: "#e2e8f0",
                                 }}
-                                formatter={(value: number) => [`€${value.toFixed(2)}`, undefined]}
+                                formatter={(value: any) => [`€${Number(value).toFixed(2)}`, undefined]}
                             />
                         </PieChart>
                     </ResponsiveContainer>
