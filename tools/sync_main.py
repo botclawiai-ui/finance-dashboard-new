@@ -16,7 +16,7 @@ SHEETS_API_KEY = os.getenv("GOOGLE_SHEETS_API_KEY")
 # Initialize Firebase using the admin credentials JSON
 try:
     if not firebase_admin._apps:
-        cred = credentials.Certificate("firebase-adminsdk.json")
+        cred = credentials.Certificate("../firebase-adminsdk.json")
         firebase_admin.initialize_app(cred)
     db = firestore.client()
     print("[SUCCESS] Firebase initialized correctly.")
@@ -95,5 +95,51 @@ def sync_data():
             
     print(f"[SUCCESS] Normalized and synced {success_count} transactions.")
 
+def sync_accounts():
+    print("[*] Starting Sync: Accounts -> Firebase")
+    url = f"https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/Accounts!A1:Z?key={SHEETS_API_KEY}"
+    
+    response = requests.get(url)
+    response.raise_for_status()
+    rows = response.json().get("values", [])
+    
+    if len(rows) < 2:
+        print("[!] No accounts data found.")
+        return
+
+    success_count = 0
+    for row in rows[1:]:
+        if not row or len(row) < 6:
+            continue
+            
+        try:
+            account_name = row[0]
+            balance_raw = row[1].replace(',', '') if row[1] else "0"
+            currency = row[2] if len(row) > 2 else "EUR"
+            institution = row[4] if len(row) > 4 else "Unknown"
+            account_id = row[5] if len(row) > 5 else None
+            
+            if not account_id:
+                continue
+
+            doc = {
+                "id": account_id,
+                "name": account_name,
+                "balance": float(balance_raw),
+                "currency": currency,
+                "institution": institution,
+            }
+            
+            if db:
+                db.collection("accounts").document(account_id).set(doc)
+            
+            success_count += 1
+            
+        except Exception as e:
+            print(f"[!] Error processing account row {row}: {e}")
+            
+    print(f"[SUCCESS] Normalized and synced {success_count} accounts.")
+
 if __name__ == "__main__":
     sync_data()
+    sync_accounts()

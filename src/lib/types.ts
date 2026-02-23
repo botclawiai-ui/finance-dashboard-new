@@ -37,4 +37,5 @@ export interface DashboardSummary {
     investmentTotal: number;
     investmentChange: number;
     investmentChangePercent: number;
+    totalBalance: number;
 }

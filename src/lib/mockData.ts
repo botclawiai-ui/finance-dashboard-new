@@ -40,6 +40,7 @@ export const mockSummary: DashboardSummary = {
     investmentTotal: 29935.00,
     investmentChange: 4466.50,
     investmentChangePercent: 17.54,
+    totalBalance: 0,
 };
 
 export const mockExpensesByCategory = [

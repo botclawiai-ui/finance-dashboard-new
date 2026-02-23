@@ -48,6 +48,7 @@ export default function ExpensePieChart({ data }: ExpensePieChartProps) {
                                     boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
                                     color: "#e2e8f0",
                                 }}
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 formatter={(value: any) => [`€${Number(value).toFixed(2)}`, undefined]}
                             />
                         </PieChart>
