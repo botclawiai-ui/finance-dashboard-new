@@ -29,9 +29,14 @@ function getCategoryColor(category: string) {
     return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
-export type Timeframe = "all" | "thisYear" | "last6Months" | "mtd";
+export type Timeframe = "all" | "thisYear" | "last6Months" | "mtd" | "custom";
 
-export async function fetchDashboardData(accountNames?: string[], timeframe: Timeframe = "last6Months") {
+export interface CustomDateRange {
+    startDate: string; // YYYY-MM-DD
+    endDate: string; // YYYY-MM-DD
+}
+
+export async function fetchDashboardData(accountNames?: string[], timeframe: Timeframe = "last6Months", customDateRange?: CustomDateRange) {
     try {
         const q = query(collection(db, "transactions"), orderBy("date", "desc"));
         const snapshot = await getDocs(q);
@@ -48,7 +53,18 @@ export async function fetchDashboardData(accountNames?: string[], timeframe: Tim
         // Apply Timeframe Filter
         const now = new Date();
         let startTime = new Date(0);
-        if (timeframe === "thisYear") {
+        let endTime = new Date(8640000000000000); // Max date
+
+        if (timeframe === "custom" && customDateRange) {
+            if (customDateRange.startDate) {
+                startTime = new Date(customDateRange.startDate);
+                startTime.setHours(0, 0, 0, 0);
+            }
+            if (customDateRange.endDate) {
+                endTime = new Date(customDateRange.endDate);
+                endTime.setHours(23, 59, 59, 999);
+            }
+        } else if (timeframe === "thisYear") {
             startTime = new Date(now.getFullYear(), 0, 1);
         } else if (timeframe === "last6Months") {
             startTime = new Date(now.getFullYear(), now.getMonth() - 5, 1);
@@ -57,7 +73,10 @@ export async function fetchDashboardData(accountNames?: string[], timeframe: Tim
         }
 
         if (timeframe !== "all") {
-            transactions = transactions.filter(tx => new Date(tx.date) >= startTime);
+            transactions = transactions.filter(tx => {
+                const txDate = new Date(tx.date);
+                return txDate >= startTime && txDate <= endTime;
+            });
         }
 
         const monthlyMap = new Map<string, { income: number; expenses: number }>();

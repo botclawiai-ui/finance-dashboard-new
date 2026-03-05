@@ -19,9 +19,12 @@ export default function DashboardPage() {
     investments: Investment[];
   } | null>(null);
 
+  const [timeframe, setTimeframe] = useState<"all" | "thisYear" | "last6Months" | "mtd" | "custom">("last6Months");
+  const [customRange, setCustomRange] = useState({ startDate: "", endDate: "" });
+
   useEffect(() => {
-    fetchDashboardData().then(setData).catch(console.error);
-  }, []);
+    fetchDashboardData(undefined, timeframe, customRange).then(setData).catch(console.error);
+  }, [timeframe, customRange]);
 
   const now = new Date();
   const greeting = now.getHours() < 12 ? "Guten Morgen" : now.getHours() < 18 ? "Guten Tag" : "Guten Abend";
@@ -42,7 +45,38 @@ export default function DashboardPage() {
           <h1 className="page-title">{greeting}, Jacob 👋</h1>
           <p className="page-subtitle">Hier ist dein Finanzüberblick für {now.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}.</p>
         </div>
-        <div className="top-bar-actions">
+        <div className="top-bar-actions" style={{ flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <select
+            className="timeframe-select"
+            value={timeframe}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onChange={(e) => setTimeframe(e.target.value as any)}
+          >
+            <option value="last6Months">Letzte 6 Monate</option>
+            <option value="mtd">Dieser Monat</option>
+            <option value="thisYear">Dieses Jahr</option>
+            <option value="all">Gesamte Zeit</option>
+            <option value="custom">Benutzerdefiniert</option>
+          </select>
+
+          {timeframe === "custom" && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '12px', borderRight: '1px solid rgba(255, 255, 255, 0.1)', paddingRight: '12px' }}>
+              <input
+                type="date"
+                className="custom-date-input"
+                value={customRange.startDate}
+                onChange={e => setCustomRange(prev => ({ ...prev, startDate: e.target.value }))}
+              />
+              <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>bis</span>
+              <input
+                type="date"
+                className="custom-date-input"
+                value={customRange.endDate}
+                onChange={e => setCustomRange(prev => ({ ...prev, endDate: e.target.value }))}
+              />
+            </div>
+          )}
+
           <span className="live-dot"></span>
           <span className="live-label">Live</span>
         </div>
